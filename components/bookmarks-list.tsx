@@ -192,32 +192,93 @@ export function BookmarksList({ refreshTrigger }: BookmarksListProps) {
       {bookmarks.map((bookmark) => (
         <div
           key={bookmark.id}
-          className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition flex items-start justify-between"
+          className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition flex items-start justify-between group"
         >
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-800 text-lg break-words">
-              {bookmark.title}
-            </h3>
+          <div className="flex items-start gap-4 flex-1 min-w-0">
+            {/* favicon */}
+            <div className="w-10 h-10 flex-shrink-0">
+              {(() => {
+                try {
+                  const u = new URL(bookmark.url);
+                  const host = u.hostname;
+                  const fav = `https://icons.duckduckgo.com/ip3/${host}.ico`;
+                  return (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={fav}
+                      alt={host}
+                      className="w-10 h-10 rounded border"
+                    />
+                  );
+                } catch (e) {
+                  return (
+                    <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center text-sm text-gray-500">
+                      🔗
+                    </div>
+                  );
+                }
+              })()}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-800 text-lg break-words truncate">
+                {bookmark.title}
+              </h3>
+
+              <div className="flex items-center gap-2 mt-1">
+                <a
+                  href={bookmark.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 text-sm truncate"
+                  title={bookmark.url}
+                >
+                  {bookmark.url}
+                </a>
+                <span className="text-gray-400 text-xs">•</span>
+                <span className="text-gray-500 text-xs">
+                  {new Date(bookmark.created_at).toLocaleDateString()}
+                </span>
+              </div>
+
+              {/* excerpt derived from path */}
+              <p className="text-gray-600 text-sm mt-2 line-clamp-2">
+                {(() => {
+                  try {
+                    const u = new URL(bookmark.url);
+                    const path = decodeURIComponent(u.pathname + u.search).replace(/\//g, ' ');
+                    return path && path !== ' ' ? path.slice(0, 140) : u.hostname;
+                  } catch (e) {
+                    return '';
+                  }
+                })()}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2 ml-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition">
             <a
               href={bookmark.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 break-all text-sm truncate inline-block max-w-full"
-              title={bookmark.url}
+              className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition"
             >
-              {bookmark.url}
+              Open
             </a>
-            <p className="text-gray-500 text-xs mt-1">
-              {new Date(bookmark.created_at).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="flex gap-2 ml-4 flex-shrink-0">
+            <button
+              onClick={() => {
+                navigator.clipboard?.writeText(bookmark.url);
+              }}
+              className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition"
+            >
+              Copy
+            </button>
             <button
               onClick={() => handleDelete(bookmark.id)}
               disabled={deleteLoading === bookmark.id}
               className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {deleteLoading === bookmark.id ? "Deleting..." : "Delete"}
+              {deleteLoading === bookmark.id ? 'Deleting...' : 'Delete'}
             </button>
           </div>
         </div>
