@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { useAuth } from "@/lib/auth-context";
 import { RealtimeChannel } from "@supabase/supabase-js";
-import { onTabMessage, postTabMessage } from "@/lib/tab-sync";
+import { onTabMessage, postTabMessage, onTabStorage } from "@/lib/tab-sync";
 
 interface Bookmark {
   id: string;
@@ -110,7 +110,25 @@ export function BookmarksList({ refreshTrigger }: BookmarksListProps) {
         setBookmarks((prev) => prev.filter((b) => b.id !== id));
       }
     });
+
+    const offStorage = onTabStorage((msg) => {
+      if (!msg) return;
+      if (msg.type === "bookmark_added") {
+        const bm = msg.bookmark as Bookmark;
+        setBookmarks((prev) => {
+          if (prev.find((p) => p.id === bm.id)) return prev;
+          return [bm, ...prev];
+        });
+      } else if (msg.type === "bookmark_deleted") {
+        const id = msg.id as string;
+        setBookmarks((prev) => prev.filter((b) => b.id !== id));
+      }
+    });
     return off;
+    return () => {
+      off();
+      offStorage();
+    };
   }, []);
 
   const handleDelete = async (bookmarkId: string) => {

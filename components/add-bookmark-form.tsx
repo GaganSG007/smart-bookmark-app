@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { useAuth } from "@/lib/auth-context";
-import { postTabMessage } from "@/lib/tab-sync";
+import { postTabMessage, postTabStorage } from "@/lib/tab-sync";
 
 interface AddBookmarkFormProps {
   onBookmarkAdded: () => void;
@@ -61,7 +61,10 @@ export function AddBookmarkForm({ onBookmarkAdded }: AddBookmarkFormProps) {
         setTitle("");
         onBookmarkAdded();
         // Broadcast to other tabs so they update immediately
-        if (newBookmark) postTabMessage({ type: "bookmark_added", bookmark: newBookmark });
+        if (newBookmark) {
+          postTabMessage({ type: "bookmark_added", bookmark: newBookmark });
+          postTabStorage({ type: "bookmark_added", bookmark: newBookmark });
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred");
