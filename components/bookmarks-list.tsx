@@ -72,6 +72,8 @@ export function BookmarksList({ refreshTrigger }: BookmarksListProps) {
             filter: `user_id=eq.${session.user.id}`,
           },
           (payload) => {
+            // Debug realtime payloads
+            console.debug("realtime payload:", payload);
             if (payload.eventType === "INSERT") {
               setBookmarks((prev) => [payload.new as Bookmark, ...prev]);
             } else if (payload.eventType === "DELETE") {
@@ -103,6 +105,9 @@ export function BookmarksList({ refreshTrigger }: BookmarksListProps) {
 
       if (deleteError) {
         setError(deleteError.message);
+      } else {
+        // Optimistic UI update: remove the bookmark immediately
+        setBookmarks((prev) => prev.filter((b) => b.id !== bookmarkId));
       }
     } catch (err) {
       setError("Failed to delete bookmark");
