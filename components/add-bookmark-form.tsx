@@ -99,7 +99,7 @@ export function AddBookmarkForm({ onBookmarkAdded }: AddBookmarkFormProps) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Bookmark title"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-black"
           />
         </div>
 
@@ -112,7 +112,7 @@ export function AddBookmarkForm({ onBookmarkAdded }: AddBookmarkFormProps) {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://example.com"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-black"
           />
         </div>
 
