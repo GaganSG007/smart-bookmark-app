@@ -139,43 +139,7 @@ git push -u origin main
 5. Click "Deploy"
 6. Update Google OAuth redirect URI in Supabase to: `https://your-vercel-deployment.vercel.app/auth/callback`
 
-## Problems Encountered & Solutions
-
-### 1. **Real-time Updates Not Working Across Tabs**
-
-**Problem**: Bookmarks added in one tab weren't appearing in another tab without page refresh.
-
-**Solution**: Implemented Supabase Realtime subscriptions in the `BookmarksList` component. The component subscribes to postgres_changes events for the bookmarks table and updates state in real-time.
-
-### 2. **Deprecated Auth Helper Package**
-
-**Problem**: The `@supabase/auth-helpers-nextjs` package was deprecated and no longer supported.
-
-**Solution**: Switched to using `@supabase/supabase-js` with `@supabase/ssr` for better Next.js 13+ App Router support. Implemented custom auth context using React's Context API.
-
-### 3. **Privacy/Row Level Security Issues**
-
-**Problem**: Initially, database queries weren't filtering by user ID, which could expose other users' bookmarks.
-
-**Solution**: Implemented proper RLS (Row Level Security) policies in Supabase ensuring users can only access their own bookmarks.
-
-### 4. **Authentication Persistence**
-
-**Problem**: User session was lost on page refresh.
-
-**Solution**: Created a custom AuthProvider that checks for existing sessions on app load and subscribes to auth state changes using Supabase's built-in session management.
-
-### 5. **URL Validation**
-
-**Problem**: Users could submit invalid URLs, causing issues.
-
-**Solution**: Added client-side URL validation using the `URL()` constructor before submission with user-friendly error messages.
-
-### 6. **Environment Variables Not Loaded in Vercel**
-
-**Problem**: Deployment failed because environment variables weren't properly configured.
-
-**Solution**: Ensured all environment variables are prefixed with `NEXT_PUBLIC_` (since they're used client-side) and added them to Vercel project settings.
+ 
 
 ## Problems Encountered & Solutions
 
