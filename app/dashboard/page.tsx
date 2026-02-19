@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { AddBookmarkForm } from "@/components/add-bookmark-form";
 import { BookmarksList } from "@/components/bookmarks-list";
+import OnboardingTooltip from "@/components/onboarding-tooltip";
 
 export default function DashboardPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -17,6 +18,7 @@ export default function DashboardPage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
+        <OnboardingTooltip />
         {/* Header */}
         <header className="bg-white shadow-sm">
           <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">

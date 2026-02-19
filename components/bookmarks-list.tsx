@@ -236,7 +236,7 @@ export function BookmarksList({ refreshTrigger }: BookmarksListProps) {
       {bookmarks.map((bookmark) => (
         <div
           key={bookmark.id}
-          className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition flex items-start justify-between group"
+          className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition transform-gpu motion-reduce:transition-none duration-150 ease-out hover:-translate-y-1 flex items-start justify-between group"
         >
           <div className="flex items-start gap-4 flex-1 min-w-0">
             {/* favicon */}
