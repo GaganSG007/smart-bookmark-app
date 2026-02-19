@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { useAuth } from "@/lib/auth-context";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import { onTabMessage } from "@/lib/tab-sync";
 
 interface Bookmark {
   id: string;
@@ -92,6 +93,22 @@ export function BookmarksList({ refreshTrigger }: BookmarksListProps) {
       channel?.unsubscribe();
     };
   }, [session]);
+
+  // Listen for cross-tab messages so background tabs update immediately
+  useEffect(() => {
+    const off = onTabMessage((msg) => {
+      if (!msg) return;
+      if (msg.type === "bookmark_added") {
+        const bm = msg.bookmark as Bookmark;
+        setBookmarks((prev) => {
+          // avoid duplicates
+          if (prev.find((p) => p.id === bm.id)) return prev;
+          return [bm, ...prev];
+        });
+      }
+    });
+    return off;
+  }, []);
 
   const handleDelete = async (bookmarkId: string) => {
     try {
