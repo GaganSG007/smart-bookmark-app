@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { useAuth } from "@/lib/auth-context";
 import { RealtimeChannel } from "@supabase/supabase-js";
-import { onTabMessage } from "@/lib/tab-sync";
+import { onTabMessage, postTabMessage } from "@/lib/tab-sync";
 
 interface Bookmark {
   id: string;
@@ -105,6 +105,9 @@ export function BookmarksList({ refreshTrigger }: BookmarksListProps) {
           if (prev.find((p) => p.id === bm.id)) return prev;
           return [bm, ...prev];
         });
+      } else if (msg.type === "bookmark_deleted") {
+        const id = msg.id as string;
+        setBookmarks((prev) => prev.filter((b) => b.id !== id));
       }
     });
     return off;
@@ -125,6 +128,12 @@ export function BookmarksList({ refreshTrigger }: BookmarksListProps) {
       } else {
         // Optimistic UI update: remove the bookmark immediately
         setBookmarks((prev) => prev.filter((b) => b.id !== bookmarkId));
+        // Broadcast deletion to other tabs so they can update immediately
+        try {
+          postTabMessage({ type: "bookmark_deleted", id: bookmarkId });
+        } catch (err) {
+          // ignore
+        }
       }
     } catch (err) {
       setError("Failed to delete bookmark");
