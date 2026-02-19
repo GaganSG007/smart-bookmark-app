@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { useAuth } from "@/lib/auth-context";
 import { RealtimeChannel } from "@supabase/supabase-js";
@@ -23,6 +24,11 @@ export function BookmarksList({ refreshTrigger }: BookmarksListProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [undoInfo, setUndoInfo] = useState<{
+    bookmark: Bookmark;
+    timerId: number | null;
+  } | null>(null);
+  const undoTimerRef = useRef<number | null>(null);
   const { session } = useAuth();
 
   const fetchBookmarks = async () => {
@@ -115,24 +121,31 @@ export function BookmarksList({ refreshTrigger }: BookmarksListProps) {
       if (!msg) return;
       if (msg.type === "bookmark_added") {
         const bm = msg.bookmark as Bookmark;
-        setBookmarks((prev) => {
+  const handleDelete = async (bookmark: Bookmark) => {
           if (prev.find((p) => p.id === bm.id)) return prev;
-          return [bm, ...prev];
+      setDeleteLoading(bookmark.id);
+      // clear any existing undo timer for a previous deletion
+      if (undoTimerRef.current) {
+        window.clearTimeout(undoTimerRef.current);
+        undoTimerRef.current = null;
+        setUndoInfo(null);
+      }
         });
       } else if (msg.type === "bookmark_deleted") {
         const id = msg.id as string;
         setBookmarks((prev) => prev.filter((b) => b.id !== id));
-      }
+        .eq("id", bookmark.id)
     });
     return off;
     return () => {
       off();
       offStorage();
     };
-  }, []);
+        setBookmarks((prev) => prev.filter((b) => b.id !== bookmark.id));
 
   const handleDelete = async (bookmarkId: string) => {
-    try {
+          postTabMessage({ type: "bookmark_deleted", id: bookmark.id });
+          postTabMessage; // noop to keep linter quiet in some environments
       setDeleteLoading(bookmarkId);
 
       const { error: deleteError } = await supabase
@@ -152,6 +165,37 @@ export function BookmarksList({ refreshTrigger }: BookmarksListProps) {
         } catch (err) {
           // ignore
         }
+
+  const handleUndo = async () => {
+    if (!undoInfo) return;
+    const bm = undoInfo.bookmark;
+    try {
+      // Re-insert the bookmark with same id
+      const { error: insertError } = await supabase.from("bookmarks").insert([
+        {
+          id: bm.id,
+          user_id: bm.user_id,
+          title: bm.title,
+          url: bm.url,
+          created_at: bm.created_at,
+        },
+      ]);
+
+      if (!insertError) {
+        setBookmarks((prev) => [bm, ...prev]);
+        postTabMessage({ type: "bookmark_added", bookmark: bm });
+        // clear undo state
+        if (undoInfo.timerId) window.clearTimeout(undoInfo.timerId);
+        undoTimerRef.current = null;
+        setUndoInfo(null);
+      } else {
+        setError(insertError.message);
+      }
+    } catch (err) {
+      console.error("Undo insert failed:", err);
+      setError("Failed to undo delete");
+    }
+  };
       }
     } catch (err) {
       setError("Failed to delete bookmark");
@@ -249,6 +293,18 @@ export function BookmarksList({ refreshTrigger }: BookmarksListProps) {
                     const path = decodeURIComponent(u.pathname + u.search).replace(/\//g, ' ');
                     return path && path !== ' ' ? path.slice(0, 140) : u.hostname;
                   } catch (e) {
+      {undoInfo && (
+        <Snackbar
+          message="Bookmark deleted"
+          actionLabel="Undo"
+          onAction={handleUndo}
+          onClose={() => {
+            if (undoInfo.timerId) window.clearTimeout(undoInfo.timerId);
+            undoTimerRef.current = null;
+            setUndoInfo(null);
+          }}
+        />
+      )}
                     return '';
                   }
                 })()}
